@@ -3,23 +3,14 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import {
-  Mail,
-  Lock,
-  User,
-  Eye,
-  EyeOff,
-  ArrowRight,
-  Feather,
-} from "lucide-react";
-import useUserStore from "../../store/userStore";
+import { Mail, Lock, User, Eye, EyeOff, Feather } from "lucide-react";
+import { useUserStore } from "../../store/userStore";
 import { useNavigate } from "react-router";
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
 
-  // changed name → fullName
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -38,20 +29,19 @@ const Login = () => {
 
     try {
       if (isLogin) {
-        // LOGIN
         await login({ email, password });
         toast.success("Welcome back! 🚀");
 
         setTimeout(() => navigate("/dashboard"), 900);
       } else {
-        // REGISTER using fullName
         await register({ fullName, email, password });
         toast.success("Account created! Logging you in… ✨");
 
         setTimeout(() => navigate("/dashboard"), 900);
       }
     } catch (err) {
-      const msg = err?.response?.data?.message || err?.message || "Something went wrong";
+      const msg =
+        err?.response?.data?.message || err?.message || "Something went wrong";
       toast.error(msg);
     }
   };
@@ -66,14 +56,12 @@ const Login = () => {
     <div className="min-h-screen w-full bg-[#F3F4F6] flex items-center justify-center p-4 font-sans">
       <ToastContainer position="top-center" theme="colored" />
 
-      {/* MAIN CARD */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
         className="bg-white w-full max-w-[1200px] min-h-[700px] rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row"
       >
-        {/* LEFT SIDE FORM */}
         <div className="w-full md:w-1/2 p-8 md:p-12 lg:p-16 relative flex flex-col justify-center">
           <div className="absolute top-8 left-8 flex items-center gap-2 text-emerald-800">
             <div className="bg-emerald-800 text-white p-1.5 rounded-lg">
@@ -102,12 +90,16 @@ const Login = () => {
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-5">
-                {/* Full Name (Signup Only) */}
                 {!isLogin && (
                   <div className="space-y-1">
-                    <label className="text-sm font-medium text-gray-700">Full Name</label>
+                    <label className="text-sm font-medium text-gray-700">
+                      Full Name
+                    </label>
                     <div className="relative group">
-                      <User className="absolute left-3 top-3 text-gray-400" size={18} />
+                      <User
+                        className="absolute left-3 top-3 text-gray-400"
+                        size={18}
+                      />
                       <input
                         type="text"
                         placeholder="John Doe"
@@ -120,11 +112,15 @@ const Login = () => {
                   </div>
                 )}
 
-                {/* Email */}
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700">Email</label>
+                  <label className="text-sm font-medium text-gray-700">
+                    Email
+                  </label>
                   <div className="relative group">
-                    <Mail className="absolute left-3 top-3 text-gray-400" size={18} />
+                    <Mail
+                      className="absolute left-3 top-3 text-gray-400"
+                      size={18}
+                    />
                     <input
                       type="email"
                       placeholder="you@example.com"
@@ -136,11 +132,15 @@ const Login = () => {
                   </div>
                 </div>
 
-                {/* Password */}
                 <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700">Password</label>
+                  <label className="text-sm font-medium text-gray-700">
+                    Password
+                  </label>
                   <div className="relative group">
-                    <Lock className="absolute left-3 top-3 text-gray-400" size={18} />
+                    <Lock
+                      className="absolute left-3 top-3 text-gray-400"
+                      size={18}
+                    />
                     <input
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
@@ -159,13 +159,14 @@ const Login = () => {
                   </div>
                 </div>
 
-                {/* Submit */}
                 <motion.button
                   whileHover={{ scale: loading ? 1 : 1.02 }}
                   whileTap={{ scale: loading ? 1 : 0.98 }}
                   disabled={loading}
                   className={`w-full py-3 rounded-xl text-white font-semibold transition-all ${
-                    loading ? "bg-emerald-600/70" : "bg-emerald-900 hover:bg-emerald-800"
+                    loading
+                      ? "bg-emerald-600/70"
+                      : "bg-emerald-900 hover:bg-emerald-800"
                   }`}
                 >
                   {loading
@@ -180,7 +181,9 @@ const Login = () => {
 
               <div className="mt-8 text-center">
                 <p className="text-sm text-gray-600">
-                  {isLogin ? "Don't have an account? " : "Already have an account? "}
+                  {isLogin
+                    ? "Don't have an account? "
+                    : "Already have an account? "}
                   <button
                     onClick={toggleMode}
                     className="font-bold text-emerald-700 hover:text-emerald-900"
@@ -194,7 +197,7 @@ const Login = () => {
         </div>
 
         {/* RIGHT SIDE MARKETING — unchanged */}
-                <div className="hidden md:flex w-1/2 bg-gradient-to-br from-[#0F3838] to-[#062525] relative flex-col justify-between p-16 text-white overflow-hidden">
+        <div className="hidden md:flex w-1/2 bg-gradient-to-br from-[#0F3838] to-[#062525] relative flex-col justify-between p-16 text-white overflow-hidden">
           <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500 rounded-full mix-blend-overlay filter blur-[100px] opacity-20 translate-x-1/3 -translate-y-1/3" />
           <div className="absolute bottom-0 left-0 w-96 h-96 bg-teal-500 rounded-full mix-blend-overlay filter blur-[100px] opacity-20 -translate-x-1/3 translate-y-1/3" />
 
@@ -204,15 +207,25 @@ const Login = () => {
               <span className="text-emerald-400">Ideas & Stories</span>
             </h2>
             <p className="text-emerald-100/80 text-lg max-w-md leading-relaxed">
-              Join a community of over 10,000 writers and readers. Share your perspectives, discover new voices, and grow your audience.
+              Join a community of over 10,000 writers and readers. Share your
+              perspectives, discover new voices, and grow your audience.
             </p>
           </div>
 
           <div className="relative z-10 bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/10 mt-12">
-            <div className="text-emerald-400 text-4xl font-serif mb-2 leading-none">“</div>
-            <p className="text-lg font-medium leading-relaxed mb-4">StoryFlow has completely transformed how I publish my content. The editor is intuitive, and the community engagement is incredible.</p>
+            <div className="text-emerald-400 text-4xl font-serif mb-2 leading-none">
+              “
+            </div>
+            <p className="text-lg font-medium leading-relaxed mb-4">
+              StoryFlow has completely transformed how I publish my content. The
+              editor is intuitive, and the community engagement is incredible.
+            </p>
             <div className="flex items-center gap-4">
-              <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="User" className="w-12 h-12 rounded-full border-2 border-emerald-400" />
+              <img
+                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                alt="User"
+                className="w-12 h-12 rounded-full border-2 border-emerald-400"
+              />
               <div>
                 <h4 className="font-bold text-white">Sarah Jenkins</h4>
                 <p className="text-sm text-emerald-200">Editor at TechDaily</p>

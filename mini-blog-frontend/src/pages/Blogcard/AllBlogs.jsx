@@ -1,148 +1,193 @@
+import React, { useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router";
+import useApi from "../../hooks/useApi";
+import { useBlogStore } from "../../store/blogStore";
+
+// Configuration: number of items shown in "Recent posts"
+const RECENT_COUNT = 5;
+
+// Skeleton card used while loading and store empty
+const SkeletonCard = () => (
+  <div className="bg-white rounded-2xl overflow-hidden shadow-sm p-5 animate-pulse">
+    <div className="h-4 w-1/4 bg-gray-200 rounded mb-3" />
+    <div className="h-3 bg-gray-200 rounded w-full mb-2" />
+    <div className="h-3 bg-gray-200 rounded w-5/6 mb-4" />
+    <div className="flex items-center justify-between mt-4">
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-full bg-gray-200" />
+        <div className="space-y-1">
+          <div className="h-3 w-20 bg-gray-200 rounded" />
+          <div className="h-2 w-28 bg-gray-200 rounded" />
+        </div>
+      </div>
+      <div className="h-8 w-20 bg-gray-200 rounded" />
+    </div>
+  </div>
+);
+
+// Format full month
+const formatDate = (raw) => {
+  try {
+    return new Date(raw).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  } catch {
+    return "—";
+  }
+};
+
+const normalize = (raw) => {
+  const id = raw._id || raw.id || Math.random().toString(36).slice(2);
+  const title = raw.title || "Untitled";
+  const content = (raw.content || raw.body || raw.excerpt || "") + "";
+  const excerpt =
+    content.length > 200 ? `${content.slice(0, 200).trim()}…` : content;
+  const tag = raw.category || (Array.isArray(raw.tags) && raw.tags[0]) || "General";
+  const date = formatDate(raw.createdAt || raw.updatedAt || raw.date);
+  const readTime =
+    raw.readTime ||
+    `${Math.max(2, Math.ceil((content.length || 0) / 200))} min read`;
+  const authorName = raw.author?.fullName || raw.author?.name || raw.fullName || "Unknown Author";
+  const slug = raw.slug || raw.slugified || id;
+  const img = raw.coverImage || raw.image || raw.img || "";
+  return { id, title, excerpt, tag, date, readTime, authorName, slug, img, raw };
+};
 
 const AllBlogs = () => {
-  const posts = Array.from({ length: 6 }).map((_, i) => ({
-    title: [
-      `Shores and lights — a photo story`,
-      `Designing delightful forms`,
-      `Packing hacks for minimalists`,
-    ][i % 3],
-    excerpt:
-      "Short excerpt about the post, practical tips and a quick take to entice readers.",
-    img: "", // replace with image URL if available
-    tag: ["Travel", "Design", "Photography"][i % 3],
-    readTime: `${4 + (i % 6)} min read`,
-    date: `Mar ${8 + i}`,
-  }));
+  const { fetchBlogs } = useApi();
 
-  const recent = posts.slice(0, 4);
+  // PUBLIC read-only state
+  const allBlogs = useBlogStore((s) => s.allBlogs);
+  const fetchedAll = useBlogStore((s) => s.fetchedAll);
+  const loading = useBlogStore((s) => s.loading);
+  const apiError = useBlogStore((s) => s.error);
+  const setAllBlogs = useBlogStore((s) => s.setAllBlogs);
+
+  useEffect(() => {
+    if (fetchedAll) return;
+
+    let mounted = true;
+    (async () => {
+      try {
+        // Ensure public: true so cookies/tokens are NOT sent
+        const arr = await fetchBlogs({ maxRetries: 3, retryDelayMs: 600, public: true });
+        if (!mounted) return;
+        if (Array.isArray(arr) && arr.length > 0) {
+          setAllBlogs(arr);
+        }
+      } catch (err) {
+        console.error("fetchBlogs (public) failed:", err?.message ?? err);
+      }
+    })();
+
+    return () => { mounted = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchedAll, fetchBlogs, setAllBlogs]);
+
+  const posts = useMemo(() => {
+    return Array.isArray(allBlogs) ? allBlogs.map(normalize) : [];
+  }, [allBlogs]);
+
+  const recent = useMemo(() => posts.slice(0, RECENT_COUNT), [posts]);
+
+  const jumpToTop = () => window.scrollTo({ top: 0, behavior: "auto" });
+
+  const showShimmer = loading || (!fetchedAll && posts.length === 0);
+
   return (
-    <>
-      <section className="max-w-7xl mx-auto px-6 lg:px-8 mt-12">
-        <div className="flex gap-8 items-start">
-          {/* Main content */}
-          <div className="flex-1">
-            <div className="mb-6 flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-semibold">Latest articles</h2>
-                <p className="text-sm text-slate-500 mt-1">
-                  Handpicked stories and practical guides.
-                </p>
-              </div>
-            </div>
+    <section className="max-w-7xl mx-auto px-6 lg:px-8 mt-12">
+      <div className="flex gap-8 items-start">
+        <div className="flex-1">
+          <h2 className="text-2xl font-semibold mb-1">Latest articles</h2>
+          <p className="text-sm text-slate-500 mb-6">
+            Handpicked stories and practical guides.
+          </p>
 
+          {showShimmer && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {posts.map((p, idx) => (
+              <SkeletonCard />
+              <SkeletonCard />
+            </div>
+          )}
+
+          {apiError && (
+            <div className="text-sm text-red-600 mb-4">
+              Error loading posts: {apiError}
+            </div>
+          )}
+
+          {!showShimmer && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {posts.map((p) => (
                 <motion.article
-                  key={idx}
-                  whileHover={{
-                    y: -6,
-                    boxShadow: "0 20px 40px rgba(2,6,23,0.08)",
-                  }}
-                  className="bg-white rounded-2xl overflow-hidden shadow-sm transition-transform duration-200"
+                  key={p.id}
+                  whileHover={{ y: -5, boxShadow: "0 20px 30px rgba(0,0,0,0.08)" }}
+                  className="bg-white rounded-2xl shadow-sm p-5 transition"
                 >
-                  <div className="flex flex-col sm:flex-row">
-                    <div className="p-5 flex-1 flex flex-col">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-emerald-600 font-semibold">
-                          {p.tag}
-                        </span>
-                        <span className="text-xs text-slate-400">
-                          {p.date} • {p.readTime}
-                        </span>
-                      </div>
+                  <div className="flex flex-col h-full">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-emerald-600 font-semibold">{p.tag}</span>
+                      <span className="text-xs text-slate-400">{p.date} • {p.readTime}</span>
+                    </div>
 
-                      <h3 className="mt-3 font-semibold text-lg leading-tight text-slate-800">
-                        {p.title}
-                      </h3>
-                      <p className="mt-2 text-sm text-slate-500 flex-1">
-                        {p.excerpt}
-                      </p>
+                    <h3 className="mt-3 font-semibold text-lg leading-tight text-slate-800">{p.title}</h3>
 
-                      <div className="mt-4 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center font-semibold text-emerald-700">
-                            T
-                          </div>
-                          <div className="text-xs">
-                            <div className="font-medium">Tommy Khan</div>
-                            <div className="text-slate-400">
-                              {p.date} • {p.readTime}
-                            </div>
-                          </div>
+                    <p className="mt-2 text-sm text-slate-500 flex-1">{p.excerpt}</p>
+
+                    <div className="mt-4 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center font-semibold text-emerald-700">
+                          {String(p.authorName || "A").slice(0, 1).toUpperCase()}
                         </div>
-
-                        <div className="flex items-center gap-2">
-                          <Link to="/blog" className="text-sm px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 shadow-sm hover:shadow-md transition">
-                            Read
-                          </Link>
+                        <div className="text-xs">
+                          <div className="font-medium">{p.authorName}</div>
                         </div>
                       </div>
+
+                      <Link
+                        to={`/blog/${p.slug}`}
+                        onClick={jumpToTop}
+                        className="text-sm px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 shadow-sm hover:shadow-md transition"
+                      >
+                        Read
+                      </Link>
                     </div>
                   </div>
                 </motion.article>
               ))}
             </div>
-          </div>
+          )}
+        </div>
 
-          {/* Aside */}
-          <aside className="w-80 hidden lg:block">
-            <div className="sticky top-24 space-y-6">
-              {/* Search / CTA */}
-              <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
-                <div className="text-sm font-medium">Search articles</div>
-                <div className="mt-3 flex gap-2">
-                  <input
-                    placeholder="Search..."
-                    className="flex-1 px-3 py-2 rounded-xl border border-slate-100 focus:outline-none"
-                  />
-                  <button className="px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-700">
-                    Go
-                  </button>
-                </div>
-              </div>
+        <aside className="w-80 hidden lg:block">
+          <div className="sticky top-24 space-y-6">
+            <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+              <div className="text-sm font-semibold">Recent posts</div>
 
-              {/* Recent posts */}
-              <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-semibold">Recent posts</h4>
-                  <span className="text-xs text-slate-400">
-                    {recent.length}
-                  </span>
-                </div>
-
-                <div className="mt-3 space-y-2">
-                  {recent.map((r, i) => (
-                    <motion.div
-                      key={i}
-                      whileHover={{ x: 6 }}
-                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 transition"
-                    >
-                      <div className="flex-1">
-                        <div className="text-sm font-medium leading-snug hover:text-emerald-700 cursor-pointer">
-                          {r.title}
-                        </div>
-                        <div className="text-xs text-slate-400 mt-1">
-                          {r.date} • {r.readTime}
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-
-                <div className="mt-4 flex items-center justify-between">
-                  <button className="text-sm px-3 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700">
-                    View all
-                  </button>
-                  <a className="text-xs text-slate-400">See popular</a>
-                </div>
+              <div className="mt-3 space-y-2">
+                {recent.map((r) => (
+                  <Link
+                    key={r.id}
+                    to={`/blog/${r.slug}`}
+                    onClick={jumpToTop}
+                    className="block p-2 rounded-lg hover:bg-slate-50 transition"
+                  >
+                    <div className="text-sm font-medium">{r.title}</div>
+                    <div className="text-xs text-slate-400">{r.date}</div>
+                  </Link>
+                ))}
+                {recent.length === 0 && (
+                  <div className="text-xs text-slate-400 py-2">No recent posts</div>
+                )}
               </div>
             </div>
-          </aside>
-        </div>
-      </section>
-    </>
+          </div>
+        </aside>
+      </div>
+    </section>
   );
 };
 

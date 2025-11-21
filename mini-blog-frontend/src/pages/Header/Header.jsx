@@ -1,4 +1,6 @@
-import { Feather } from "lucide-react";
+// src/components/Header.jsx
+import React from "react";
+import { Feather, Bot } from "lucide-react";
 import { Link } from "react-router";
 
 const Header = () => {
@@ -7,24 +9,33 @@ const Header = () => {
       <div className="max-w-6xl mx-auto px-6 lg:px-8 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div className="bg-emerald-800 text-white p-1.5 rounded-lg">
-              <Feather size={20} />
-            </div>
+            <Feather size={20} />
+          </div>
+
           <a
             href="#"
             className="text-2xl font-extrabold tracking-tight select-none"
           >
             Blogjar
           </a>
-
         </div>
 
         <div className="flex items-center gap-3">
-
-
-          <Link to="/login" className="hidden md:inline-flex items-center gap-2 px-4 py-2 rounded-full border border-slate-200 text-sm hover:bg-slate-50">
-            Sign in
+          {/* Support button - eye catching color, LifeBuoy icon */}
+          <Link
+            to="/blog-support"
+            aria-label="Support"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-rose-600 text-white text-sm font-semibold shadow-md hover:bg-rose-700 transition"
+          >
+            <Bot size={16} />
+            <span>Support</span>
           </Link>
-          <Link to="/login" className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-600 text-white text-sm shadow-sm hover:shadow-md">
+
+          {/* Login button */}
+          <Link
+            to="/login"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-600 text-white text-sm shadow-sm hover:shadow-md transition"
+          >
             Login
           </Link>
         </div>

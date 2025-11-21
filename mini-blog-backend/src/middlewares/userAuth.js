@@ -4,12 +4,13 @@ const User = require("../models/userModel");
 const auth = async (req, res, next) => {
   try {
     const token = req.cookies.token;
+    console.log(token);
     if (!token) {
       return res.status(401).json({ message: "No token found" });
     }
 
-
-    const decoded = jwt.verify(token, "gaurav@123"); 
+    const SECRET_KEY = process.env.JWT_SECRET_KEY
+    const decoded = jwt.verify(token, SECRET_KEY); 
     const user = await User.findById(decoded._id).select("-password");
 
     if (!user) {

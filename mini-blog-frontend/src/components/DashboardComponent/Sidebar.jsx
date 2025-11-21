@@ -2,10 +2,11 @@
 import React from "react";
 import { AlignLeft, LayoutGrid, PenTool, Settings, Bot } from "lucide-react";
 import { NavLink } from "react-router";
-import useUserStore from "../../store/userStore";
+import { useUserStore } from "../../store/userStore";
 
 const Sidebar = () => {
-  const openSettings = useUserStore((s) => s.settingModal);
+  // get the setter from the store to open/close settings modal
+  const setSettingsModal = useUserStore((s) => s.setSettingsModal);
 
   const baseItem =
     "flex flex-col items-center gap-1 w-full mt-2 transition-colors duration-200 ease-out";
@@ -21,9 +22,7 @@ const Sidebar = () => {
         to="/dashboard"
         end
         className={({ isActive }) =>
-          `${baseItem} ${
-            isActive ? "text-white" : "text-gray-400 hover:text-white"
-          }`
+          `${baseItem} ${isActive ? "text-white" : "text-gray-400 hover:text-white"}`
         }
       >
         <div className={`${iconBox} bg-emerald-600 shadow-lg`}>
@@ -37,9 +36,7 @@ const Sidebar = () => {
         <NavLink
           to="/dashboard/create-blog"
           className={({ isActive }) =>
-            `${baseItem} ${
-              isActive ? "text-white" : "text-gray-400 hover:text-white"
-            }`
+            `${baseItem} ${isActive ? "text-white" : "text-gray-400 hover:text-white"}`
           }
         >
           <div className={`${iconBox} hover:bg-white/10`}>
@@ -51,9 +48,7 @@ const Sidebar = () => {
         <NavLink
           to="/dashboard/manage-blog"
           className={({ isActive }) =>
-            `${baseItem} ${
-              isActive ? "text-white" : "text-gray-400 hover:text-white"
-            }`
+            `${baseItem} ${isActive ? "text-white" : "text-gray-400 hover:text-white"}`
           }
         >
           <div className={`${iconBox} hover:bg-white/10`}>
@@ -65,7 +60,7 @@ const Sidebar = () => {
         {/* Settings: open store modal (no navigation) */}
         <button
           type="button"
-          onClick={() => openSettings(true)}
+          onClick={() => setSettingsModal(true)}
           className={`${baseItem} text-gray-400 hover:text-white focus:outline-none`}
           aria-label="Open settings"
         >
@@ -79,9 +74,7 @@ const Sidebar = () => {
         <NavLink
           to="/dashboard/support"
           className={({ isActive }) =>
-            `${baseItem} ${
-              isActive ? "text-white" : "text-gray-400 hover:text-white"
-            }`
+            `${baseItem} ${isActive ? "text-white" : "text-gray-400 hover:text-white"}`
           }
         >
           <div

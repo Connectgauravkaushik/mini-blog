@@ -1,151 +1,228 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  LayoutGrid, PenTool, Settings, Search, 
-  Edit3, Trash2, MoreVertical, Filter, 
-  ChevronRight, FileText, CheckCircle2, AlertCircle
-} from 'lucide-react';
+// src/components/ManageBlogs.jsx
+import React, { useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Search,
+  Edit3,
+  Trash2,
+  MoreVertical,
+  Filter,
+  FileText,
+  CheckCircle2,
+  Circle,
+  CalendarDays,
+} from "lucide-react";
+import { useBlogStore } from "../../store/blogStore";
+import { useUserStore } from "../../store/userStore";
+import SimpleEditModal from "./EditBlog";
+import DeleteBlogModal from "./DeleteBlog";
 
+/**
+ * ManageBlogs — purely client-side
+ * - reads posts from authorBlogs (same source Dashboard uses)
+ * - no network calls here
+ * - keeps edit/delete modals wired up
+ */
 
-// --- COMPONENT 2: BLOG LIST & ACTIONS ---
-const BlogList = () => {
-  // Mock Data matching your wireframe structure
-  const [blogs, setBlogs] = useState([
-    { id: 1, title: "The Future of React Server Components", content: "An in-depth look at how RSCs change the rendering paradigm...", status: "Published", date: "Oct 24" },
-    { id: 2, title: "Minimalist Design Principles", content: "Why whitespace is the most important element in your UI design...", status: "Draft", date: "Oct 22" },
-    { id: 3, title: "Understanding TypeScript Generics", content: "A beginner-friendly guide to mastering generic types in TS...", status: "Published", date: "Sep 15" },
-    { id: 4, title: "State Management in 2024", content: "Comparing Redux, Zustand, and Context API for modern apps...", status: "Published", date: "Aug 30" },
-    { id: 5, title: "Building Accessible Forms", content: "Essential tips for creating inclusive web forms for all users...", status: "Draft", date: "Aug 12" },
-  ]);
-
-  const handleDelete = (id) => {
-    setBlogs(blogs.filter(blog => blog.id !== id));
-  };
-
-  return (
-    <div className="flex-1 bg-[#FAFAFA] h-full overflow-hidden flex flex-col">
-      
-      {/* Header Section */}
-      <header className="px-8 py-8 md:px-12 pt-12 pb-6">
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <h1 className="text-4xl font-serif font-bold text-[#1C1C1C] tracking-tight mb-2">
-            Manage Stories
-          </h1>
-          <p className="text-gray-400 font-medium text-sm">
-            View, edit, and manage your publication content.
-          </p>
-        </motion.div>
-
-        {/* Toolbar: Search & Filter */}
-        <div className="mt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          
-          {/* Search Input */}
-          <div className="relative w-full md:max-w-md group">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search size={18} className="text-gray-400 group-focus-within:text-emerald-600 transition-colors" />
-            </div>
-            <input
-              type="text"
-              placeholder="Search by title..."
-              className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl leading-5 bg-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all shadow-sm"
-            />
-          </div>
-
-          {/* Filter Button */}
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-gray-600 text-sm font-semibold hover:bg-gray-50 transition-colors shadow-sm">
-            <Filter size={16} />
-            <span>Filter</span>
-          </button>
-        </div>
-      </header>
-
-      {/* Table Header Row */}
-      <div className="px-8 md:px-12 pb-2 hidden md:flex items-center text-[10px] font-bold tracking-widest text-gray-400 uppercase select-none">
-        <div className="w-[40%] pl-4">Title</div>
-        <div className="w-[40%]">Content Preview</div>
-        <div className="w-[20%] text-right pr-4">Actions</div>
-      </div>
-
-      {/* Scrollable List Area */}
-      <div className="flex-1 overflow-y-auto px-8 md:px-12 pb-12 scrollbar-hide">
-        <div className="space-y-3">
-          <AnimatePresence>
-            {blogs.map((blog, index) => (
-              <motion.div
-                key={blog.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ delay: index * 0.05 }}
-                whileHover={{ scale: 1.005, backgroundColor: "rgba(255,255,255,1)" }}
-                className="group bg-white border border-gray-100 rounded-2xl p-4 md:py-5 md:px-6 flex flex-col md:flex-row items-start md:items-center gap-4 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.06)] hover:border-emerald-500/20 transition-all duration-300 cursor-default"
-              >
-                
-                {/* Column 1: Title & Meta */}
-                <div className="w-full md:w-[40%] flex items-center gap-4">
-                  <div className={`p-2.5 rounded-lg hidden sm:block ${blog.status === 'Published' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}>
-                    <FileText size={20} />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-gray-900 font-serif leading-tight group-hover:text-emerald-900 transition-colors">
-                      {blog.title}
-                    </h3>
-                    <div className="flex items-center gap-2 mt-1">
-                       <span className={`text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 ${blog.status === 'Published' ? 'text-emerald-600' : 'text-amber-500'}`}>
-                         {blog.status === 'Published' ? <CheckCircle2 size={10} /> : <AlertCircle size={10} />}
-                         {blog.status}
-                       </span>
-                       <span className="text-gray-300">•</span>
-                       <span className="text-xs text-gray-400">{blog.date}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Column 2: Content Preview */}
-                <div className="w-full md:w-[40%]">
-                  <p className="text-sm text-gray-500 line-clamp-1 md:line-clamp-1 font-medium">
-                    {blog.content}
-                  </p>
-                </div>
-
-                {/* Column 3: Actions */}
-                <div className="w-full md:w-[20%] flex items-center justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
-                  
-                  <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-gray-500 hover:bg-emerald-50 hover:text-emerald-700 transition-colors border border-transparent hover:border-emerald-200">
-                    <Edit3 size={14} />
-                    <span className="hidden lg:inline">Edit</span>
-                  </button>
-
-                  <button 
-                    onClick={() => handleDelete(blog.id)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors border border-transparent hover:border-red-200"
-                  >
-                    <Trash2 size={14} />
-                    <span className="hidden lg:inline">Delete</span>
-                  </button>
-
-                  <button className="p-1.5 text-gray-300 hover:text-gray-600 md:hidden lg:block">
-                    <MoreVertical size={16} />
-                  </button>
-
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+const SkeletonRow = () => (
+  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 px-6 py-5 items-center">
+    <div className="col-span-12 md:col-span-6 pr-4">
+      <div className="flex items-start gap-3">
+        <div className="mt-1 text-slate-300 w-6 h-6 rounded bg-slate-200" />
+        <div className="min-w-0">
+          <div className="h-4 w-44 bg-slate-200 rounded mb-2" />
+          <div className="h-3 w-64 bg-slate-100 rounded" />
         </div>
       </div>
     </div>
-  );
-};
+    <div className="col-span-6 md:col-span-2">
+      <div className="h-6 w-20 bg-slate-100 rounded" />
+    </div>
+    <div className="col-span-6 md:col-span-2">
+      <div className="h-4 w-28 bg-slate-100 rounded" />
+    </div>
+    <div className="col-span-12 md:col-span-2 flex justify-end">
+      <div className="h-8 w-28 bg-slate-100 rounded" />
+    </div>
+  </div>
+);
 
-// --- MAIN LAYOUT WRAPPER ---
 const ManageBlogs = () => {
+  // read from author-specific state (Dashboard uses this same state)
+  const authorBlogs = useBlogStore((s) => s.authorBlogs);
+  // fallback to editable 'blogs' if authorBlogs is empty and you want that
+  const fallbackBlogs = useBlogStore((s) => s.blogs);
+
+  // user store modal helpers
+  const openEditingModal = useUserStore((s) => s.openEditingModal);
+  const closeEditingModal = useUserStore((s) => s.closeEditingModal);
+  const showEditingModal = useUserStore((s) => s.showEditingModal);
+  const editingBlog = useUserStore((s) => s.editingBlog);
+  const openDeleteModal = useUserStore((s) => s.openDeleteModal);
+
+  // Use authorBlogs first, then fallback to blogs
+  const source = Array.isArray(authorBlogs) && authorBlogs.length > 0 ? authorBlogs : fallbackBlogs || [];
+
+  // normalize for UI
+  const normalized = useMemo(() => {
+    return (source || []).map((raw) => {
+      const id = raw._id || raw.id || String(raw._uuid || raw.tempId || Math.random());
+      const title = raw.title || raw.name || "Untitled";
+      const content = raw.content || raw.body || raw.excerpt || "";
+      const status =
+        raw.status && String(raw.status).toLowerCase() === "draft"
+          ? "Draft"
+          : raw.published === false
+          ? "Draft"
+          : "Published";
+      const dateRaw = raw.updatedAt || raw.createdAt || raw.date || null;
+      const date = dateRaw
+        ? new Date(dateRaw).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+        : "—";
+      return { id, title, content, status, date, raw };
+    });
+  }, [source]);
+
+  const handleOpenDelete = (raw) => {
+    openDeleteModal(raw);
+  };
+
+  // simple boolean for empty state
+  const empty = !Array.isArray(normalized) || normalized.length === 0;
+
   return (
-    <div className="flex h-screen w-full overflow-hidden font-sans selection:bg-emerald-100 selection:text-emerald-900">
-      <BlogList />
+    <div className="w-full min-h-screen bg-slate-50 text-slate-600 font-sans flex flex-col">
+      {/* Header */}
+      <header className="px-6 py-8 md:px-10 lg:px-16">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">Content Manager</h1>
+            <p className="text-slate-500 text-sm mt-1">Manage your publication's posts and drafts.</p>
+          </div>
+
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="relative flex-1 md:w-72">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <input
+                type="text"
+                placeholder="Search stories..."
+                className="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all shadow-sm"
+              />
+            </div>
+            <button className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-600 transition-colors shadow-sm">
+              <Filter size={18} />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main List Area */}
+      <main className="flex-1 px-6 md:px-10 lg:px-16 pb-12">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-slate-200 overflow-hidden">
+            {/* Table Header */}
+            <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-slate-100 bg-slate-50/50 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <div className="col-span-6">Title & Excerpt</div>
+              <div className="col-span-2">Status</div>
+              <div className="col-span-2">Date</div>
+              <div className="col-span-2 text-right">Actions</div>
+            </div>
+
+            {/* Rows */}
+            <div className="divide-y divide-slate-100">
+              <AnimatePresence mode="popLayout">
+                {empty ? (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-20 text-center">
+                    <p className="text-slate-400 text-sm">No stories found.</p>
+                  </motion.div>
+                ) : (
+                  normalized.map((blog) => (
+                    <motion.div
+                      key={blog.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      layout
+                      className="group grid grid-cols-1 md:grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-slate-50/60 transition-colors duration-200"
+                    >
+                      {/* Column 1: Title */}
+                      <div className="col-span-12 md:col-span-6 pr-4">
+                        <div className="flex items-start gap-3">
+                          <div className="mt-1 text-slate-300">
+                            <FileText size={16} />
+                          </div>
+                          <div className="min-w-0">
+                            <h3
+                              onClick={() => openEditingModal(blog.raw)}
+                              className="text-sm font-bold text-slate-900 cursor-pointer group-hover:text-emerald-700 transition-colors duration-200"
+                            >
+                              {blog.title}
+                            </h3>
+                            <p className="text-xs text-slate-500 mt-1 truncate font-medium max-w-md">
+                              {blog.content || "No content preview available"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Column 2: Status */}
+                      <div className="col-span-6 md:col-span-2 flex items-center">
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${
+                            blog.status === "Published"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-100"
+                              : "bg-slate-100 text-slate-600 border-slate-200"
+                          }`}
+                        >
+                          {blog.status === "Published" ? <CheckCircle2 size={10} /> : <Circle size={8} fill="currentColor" />}
+                          {blog.status}
+                        </span>
+                      </div>
+
+                      {/* Column 3: Date */}
+                      <div className="col-span-6 md:col-span-2 flex items-center text-xs text-slate-400 font-medium">
+                        <CalendarDays size={14} className="mr-2 opacity-70" />
+                        {blog.date}
+                      </div>
+
+                      {/* Column 4: Actions */}
+                      <div className="col-span-12 md:col-span-2 flex items-center justify-end gap-1">
+                        <div className="flex items-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
+                          <button
+                            onClick={() => openEditingModal(blog.raw)}
+                            className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-md transition-all"
+                            title="Edit"
+                          >
+                            <Edit3 size={15} />
+                          </button>
+                          <button
+                            onClick={() => handleOpenDelete(blog.raw)}
+                            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-all"
+                            title="Delete"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                        <button className="md:hidden text-slate-300">
+                          <MoreVertical size={16} />
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Modals */}
+      <AnimatePresence>
+        {showEditingModal && editingBlog && (
+          <SimpleEditModal isOpen={showEditingModal} blog={editingBlog} onClose={() => closeEditingModal()} />
+        )}
+      </AnimatePresence>
+      <DeleteBlogModal />
     </div>
   );
 };
