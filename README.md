@@ -25,7 +25,7 @@ The app uses:
 
 - ### Clone Repository
 
-git clone https://github.com/your-username/your-repo.git
+git clone https://github.com/Connectgauravkaushik/mini-blog.git
 cd your-repo
 
 - ### Project run command 
