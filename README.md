@@ -30,8 +30,8 @@ cd your-repo
 
 - ### Project run command 
 
-**Frontend run command** - npm run dev
-**Backend run command** - npm start
+- **Frontend run command** - npm run dev
+- **Backend run command** - npm start
 
 ## 🛠️ Features
 
