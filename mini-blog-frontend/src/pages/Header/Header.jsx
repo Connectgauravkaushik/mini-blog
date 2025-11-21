@@ -1,5 +1,3 @@
-// src/components/Header.jsx
-import React from "react";
 import { Feather, Bot } from "lucide-react";
 import { Link } from "react-router";
 
@@ -21,7 +19,7 @@ const Header = () => {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Support button - eye catching color, LifeBuoy icon */}
+
           <Link
             to="/blog-support"
             aria-label="Support"
@@ -31,7 +29,7 @@ const Header = () => {
             <span>Support</span>
           </Link>
 
-          {/* Login button */}
+   
           <Link
             to="/login"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-600 text-white text-sm shadow-sm hover:shadow-md transition"

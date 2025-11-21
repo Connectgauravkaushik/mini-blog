@@ -1,11 +1,8 @@
-// src/components/DashboardComponent/Sidebar.jsx
-import React from "react";
 import { AlignLeft, LayoutGrid, PenTool, Settings, Bot } from "lucide-react";
 import { NavLink } from "react-router";
 import { useUserStore } from "../../store/userStore";
 
 const Sidebar = () => {
-  // get the setter from the store to open/close settings modal
   const setSettingsModal = useUserStore((s) => s.setSettingsModal);
 
   const baseItem =
@@ -17,12 +14,13 @@ const Sidebar = () => {
 
   return (
     <aside className="w-[70px] h-screen bg-[#1C1C1C] flex flex-col items-center py-6 shadow-xl">
-      {/* Home */}
       <NavLink
         to="/dashboard"
         end
         className={({ isActive }) =>
-          `${baseItem} ${isActive ? "text-white" : "text-gray-400 hover:text-white"}`
+          `${baseItem} ${
+            isActive ? "text-white" : "text-gray-400 hover:text-white"
+          }`
         }
       >
         <div className={`${iconBox} bg-emerald-600 shadow-lg`}>
@@ -31,12 +29,13 @@ const Sidebar = () => {
         <span className="text-[10px] font-medium text-gray-300">Home</span>
       </NavLink>
 
-      {/* Menu */}
       <div className="flex flex-col gap-6 mt-10 w-full items-center">
         <NavLink
           to="/dashboard/create-blog"
           className={({ isActive }) =>
-            `${baseItem} ${isActive ? "text-white" : "text-gray-400 hover:text-white"}`
+            `${baseItem} ${
+              isActive ? "text-white" : "text-gray-400 hover:text-white"
+            }`
           }
         >
           <div className={`${iconBox} hover:bg-white/10`}>
@@ -48,7 +47,9 @@ const Sidebar = () => {
         <NavLink
           to="/dashboard/manage-blog"
           className={({ isActive }) =>
-            `${baseItem} ${isActive ? "text-white" : "text-gray-400 hover:text-white"}`
+            `${baseItem} ${
+              isActive ? "text-white" : "text-gray-400 hover:text-white"
+            }`
           }
         >
           <div className={`${iconBox} hover:bg-white/10`}>
@@ -57,7 +58,6 @@ const Sidebar = () => {
           <span className={label}>Manage</span>
         </NavLink>
 
-        {/* Settings: open store modal (no navigation) */}
         <button
           type="button"
           onClick={() => setSettingsModal(true)}
@@ -70,11 +70,12 @@ const Sidebar = () => {
           <span className={label}>Settings</span>
         </button>
 
-        {/* Support */}
         <NavLink
           to="/dashboard/support"
           className={({ isActive }) =>
-            `${baseItem} ${isActive ? "text-white" : "text-gray-400 hover:text-white"}`
+            `${baseItem} ${
+              isActive ? "text-white" : "text-gray-400 hover:text-white"
+            }`
           }
         >
           <div
@@ -92,7 +93,6 @@ const Sidebar = () => {
         </NavLink>
       </div>
 
-      {/* Avatar */}
       <div className="mt-auto mb-4">
         <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-400 to-blue-500 border-2 border-[#1C1C1C] ring-1 ring-gray-700"></div>
       </div>

@@ -1,27 +1,21 @@
-// src/store/userStore.js
 import { create } from "zustand";
 import axios from "axios";
 import { BASE_URL } from "../utils/constant";
 
-/**
- * User store (auth + simple UI flags).
- * Added delete modal state: deleteBlog (boolean) and deletingBlog (object)
- */
+import { useBlogStore } from "./blogStore";
+
 export const useUserStore = create((set, get) => ({
-  // state
   user: null,
   isAuthenticated: false,
   loading: false,
   error: null,
 
-  // UI state
   showSettingsModal: false,
   showEditingModal: false,
   editingBlog: null,
   deleteBlog: false,
-  deletingBlog: null, // blog object being considered for deletion
+  deletingBlog: null,
 
-  // actions
   setUser: (user) =>
     set({ user, isAuthenticated: !!user, loading: false, error: null }),
 
@@ -29,10 +23,8 @@ export const useUserStore = create((set, get) => ({
     set({ user: null, isAuthenticated: false, loading: false, error: null }),
 
   setLoading: (v) => set({ loading: v }),
-
   setError: (err) => set({ error: err }),
 
-  // login: expects backend to set cookie (withCredentials: true)
   login: async ({ email, password }) => {
     set({ loading: true, error: null });
     try {
@@ -55,18 +47,15 @@ export const useUserStore = create((set, get) => ({
     }
   },
 
-  // register (signup)
   register: async ({ fullName, email, password }) => {
     set({ loading: true, error: null });
     try {
       const payload = { email, password };
       if (fullName) payload.fullName = fullName;
 
-      const res = await axios.post(
-        `${BASE_URL}/api/auth/signup`,
-        payload,
-        { withCredentials: true }
-      );
+      const res = await axios.post(`${BASE_URL}/api/auth/signup`, payload, {
+        withCredentials: true,
+      });
 
       const returned = res.data;
       const user = returned?.user ?? returned;
@@ -84,16 +73,54 @@ export const useUserStore = create((set, get) => ({
     }
   },
 
-  // local logout (client-side); call backend endpoint if you need server-side cookie clear
   logout: async (callServer = false) => {
+    try {
+      set({
+        user: null,
+        isAuthenticated: false,
+        loading: false,
+        error: null,
+        showSettingsModal: false,
+        showEditingModal: false,
+        editingBlog: null,
+        deleteBlog: false,
+        deletingBlog: null,
+      });
+
+      useBlogStore.setState({
+        authorBlogs: [],
+        blogs: [],
+        fetchedAuthor: false,
+        fetched: false,
+      });
+
+      try {
+        const PREFIX = "author_blogs_cache";
+        const toRemove = [];
+        for (let i = 0; i < localStorage.length; i += 1) {
+          const k = localStorage.key(i);
+          if (!k) continue;
+          if (k.startsWith(PREFIX)) toRemove.push(k);
+        }
+        toRemove.forEach((k) => localStorage.removeItem(k));
+      } catch (e) {
+        console.log(e.err);
+      }
+    } catch (e) {
+      console.log(e.err);
+    }
+
     if (callServer) {
       try {
-        await axios.post(`${BASE_URL}/api/auth/logout`, {}, { withCredentials: true });
+        await axios.post(
+          `${BASE_URL}/api/auth/logout`,
+          {},
+          { withCredentials: true }
+        );
       } catch (e) {
-        // ignore server logout errors
+        console.log(e.err);
       }
     }
-    set({ user: null, isAuthenticated: false, loading: false, error: null });
   },
 
   // modal helpers
@@ -101,7 +128,6 @@ export const useUserStore = create((set, get) => ({
     set({ showSettingsModal: !!showSettings });
   },
 
-  // editing modal: open/close and set editing blog
   openEditingModal: (blog) => {
     set({ editingBlog: blog ?? null, showEditingModal: true });
   },
@@ -110,7 +136,6 @@ export const useUserStore = create((set, get) => ({
     set({ editingBlog: null, showEditingModal: false });
   },
 
-  // delete modal: open/close and set deleting blog
   openDeleteModal: (blog) => {
     set({ deletingBlog: blog ?? null, deleteBlog: true });
   },
@@ -119,7 +144,6 @@ export const useUserStore = create((set, get) => ({
     set({ deletingBlog: null, deleteBlog: false });
   },
 
-  // convenience setter if you need to update editingBlog fields locally
   setEditingBlog: (partial) =>
     set((state) => ({
       editingBlog: { ...(state.editingBlog || {}), ...(partial || {}) },

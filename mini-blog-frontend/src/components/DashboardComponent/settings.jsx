@@ -1,4 +1,3 @@
-// src/components/DashboardComponent/SettingsModal.jsx
 import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, LogOut, Mail, Check, Copy, User } from "lucide-react";
@@ -43,7 +42,6 @@ const SettingsModal = () => {
 
   const navigate = useNavigate();
 
-  // normalize backend wrapper { NewUser: {...} } or raw user object
   const user = useMemo(() => {
     if (!rawUser) return null;
     return rawUser.NewUser && typeof rawUser.NewUser === "object"
@@ -62,11 +60,10 @@ const SettingsModal = () => {
     if (busy) return;
     setBusy(true);
     try {
-      // call server-side logout; store.logout will also clear local user state
       await logout(true);
       toast.info("Signed out");
       close();
-      // redirect to login page
+
       navigate("/login", { replace: true });
     } catch (err) {
       console.error("Sign out failed:", err);
@@ -113,7 +110,6 @@ const SettingsModal = () => {
               aria-modal="true"
               aria-label="Settings"
             >
-              {/* Close Button - Absolute positioning for cleaner header */}
               <button
                 onClick={close}
                 className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-full transition-colors z-10"
@@ -128,7 +124,6 @@ const SettingsModal = () => {
                   </div>
                 ) : (
                   <div className="flex flex-col items-center">
-                    {/* Avatar Section */}
                     <div className="relative mb-5">
                       <div className="w-24 h-24 rounded-full bg-slate-50 ring-4 ring-white shadow-sm overflow-hidden">
                         <img
@@ -140,12 +135,10 @@ const SettingsModal = () => {
                       <div className="absolute bottom-0 right-0 bg-emerald-500 w-5 h-5 border-4 border-white rounded-full"></div>
                     </div>
 
-                    {/* User Info */}
                     <h2 className="text-xl font-bold text-slate-900 tracking-tight mb-1">
                       {user.fullName}
                     </h2>
 
-                    {/* Interactive Email Pill */}
                     <button
                       onClick={() => copyToClipboard(user.email)}
                       className="group flex items-center gap-2 px-4 py-1.5 mt-1 rounded-full bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-all duration-200 text-sm font-medium"
@@ -162,10 +155,8 @@ const SettingsModal = () => {
                       </span>
                     </button>
 
-                    {/* Divider */}
                     <div className="w-full h-px bg-slate-100 my-8" />
 
-                    {/* Actions */}
                     <div className="w-full space-y-3">
                       <div className="flex items-center justify-between px-4 py-3 bg-slate-50 rounded-xl border border-slate-100">
                         <div className="flex items-center gap-3">

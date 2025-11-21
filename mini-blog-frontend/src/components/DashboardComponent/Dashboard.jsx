@@ -11,15 +11,11 @@ import {
 } from "lucide-react";
 import useApi from "../../hooks/useApi";
 import { useBlogStore } from "../../store/blogStore";
+import { useUserStore } from "../../store/userStore";
 import EditBlogModal from "./EditBlog";
 import { Link } from "react-router";
 
-/**
- * Dashboard — uses author-specific store (authorBlogs).
- * Does NOT overwrite global `blogs` or `allBlogs`.
- */
-
-const CACHE_KEY = "author_blogs_cache";
+const CACHE_PREFIX = "author_blogs_cache";
 const MAX_CACHE_ITEMS = 100;
 
 const SkeletonCard = () => (
@@ -45,40 +41,61 @@ const SkeletonCard = () => (
 );
 
 const Dashboard = () => {
-  // useApi returns fetchAuthorBlogs (and fetchDynamic)
   const {
     fetchAuthorBlogs,
-    fetchDynamic,
     loading: apiLoading,
     error: apiError,
     cancelLast,
   } = useApi();
 
-  // READ from author-specific state (separate from global blogs)
   const authorBlogs = useBlogStore((s) => s.authorBlogs);
   const fetchedAuthor = useBlogStore((s) => s.fetchedAuthor);
   const setAuthorBlogs = useBlogStore((s) => s.setAuthorBlogs);
+  const setFetchedAuthor = useBlogStore((s) => s.setFetchedAuthor);
 
-  // We still use global loading/error flags for now (or you can add separate ones)
   const setLoading = useBlogStore((s) => s.setLoading);
   const setError = useBlogStore((s) => s.setError);
 
-  // helper to read cookie (unchanged)
-  function getCookie(name) {
-    const match = document.cookie.match(
-      new RegExp("(?:^|; )" + name + "=([^;]+)")
-    );
-    return match ? decodeURIComponent(match[1]) : null;
-  }
-  console.log("token from cookie (client-side):", getCookie("token"));
+  const user = useUserStore((s) => s.user);
 
-  // Only fetch author blogs if we haven't fetched them yet
+  const cacheKey = `${CACHE_PREFIX}_${user?._id ?? "anon"}`;
+
   useEffect(() => {
-    if (fetchedAuthor) return;
+    if (!user) {
+      try {
+        setAuthorBlogs([]);
+        setFetchedAuthor(false);
+        setLoading(false);
+        setError(null);
 
-    // try cache first
+        try {
+          for (let i = localStorage.length - 1; i >= 0; i--) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith(CACHE_PREFIX)) localStorage.removeItem(k);
+          }
+        } catch (e) {
+          console.log(e.err);
+        }
+      } catch (e) {
+        console.log(e.err);
+      }
+    }
+  }, [user?.id, user?._id, user]);
+
+  useEffect(() => {
+    if (fetchedAuthor && Array.isArray(authorBlogs) && authorBlogs.length > 0)
+      return;
+
     try {
-      const raw = localStorage.getItem(CACHE_KEY);
+      setAuthorBlogs([]);
+      setLoading(true);
+      setError(null);
+    } catch (e) {
+      console.log(e.err);
+    }
+
+    try {
+      const raw = localStorage.getItem(cacheKey);
       if (raw) {
         const cached = JSON.parse(raw);
         if (Array.isArray(cached) && cached.length > 0) {
@@ -86,37 +103,33 @@ const Dashboard = () => {
         }
       }
     } catch (e) {
-      console.warn("Failed to read author blog cache", e);
+      console.log(e.err);
     }
 
     let mounted = true;
 
-    async function loadAuthorBlogs() {
+    async function load() {
       setLoading(true);
       setError(null);
-
       try {
-        const normalized = await fetchAuthorBlogs({
+        await fetchAuthorBlogs({
           onSuccess: (arr) => {
             if (!mounted) return;
             const normalizedArr = Array.isArray(arr) ? arr : [];
             setAuthorBlogs(normalizedArr);
+            setFetchedAuthor(true);
             setLoading(false);
 
-            // update cache (author-specific)
             try {
               const toCache = Array.isArray(normalizedArr)
                 ? normalizedArr.slice(0, MAX_CACHE_ITEMS)
                 : [];
-              localStorage.setItem(CACHE_KEY, JSON.stringify(toCache));
+              localStorage.setItem(cacheKey, JSON.stringify(toCache));
             } catch (e) {
-              /* ignore quota errors */
+              console.log(e.err);
             }
           },
         });
-
-        if (!mounted) return;
-        setLoading(false);
       } catch (err) {
         if (!mounted) return;
         setLoading(false);
@@ -126,20 +139,19 @@ const Dashboard = () => {
       }
     }
 
-    loadAuthorBlogs();
+    load();
 
     return () => {
       mounted = false;
       try {
         if (typeof cancelLast === "function") cancelLast();
       } catch (e) {
-        /* ignore */
+        console.log(e.err);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetchedAuthor, fetchAuthorBlogs, setAuthorBlogs]);
+  }, [user?._id, cacheKey, fetchAuthorBlogs, setAuthorBlogs, setFetchedAuthor]);
 
-  // normalized list memoized (dashboard view uses authorBlogs)
+
   const normalized = useMemo(() => {
     return (authorBlogs || []).map((blog) => {
       const id = blog._id || blog.id || Math.random().toString(36).slice(2);
@@ -226,12 +238,6 @@ const Dashboard = () => {
               <div className="flex gap-2 text-sm font-medium text-gray-500">
                 <button className="px-3 py-1.5 rounded-md text-emerald-700 bg-emerald-50">
                   All
-                </button>
-                <button className="px-3 py-1.5 rounded-md hover:bg-gray-100">
-                  Published
-                </button>
-                <button className="px-3 py-1.5 rounded-md hover:bg-gray-100">
-                  Drafts
                 </button>
               </div>
             </div>

@@ -1,13 +1,11 @@
-import React, { useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router";
 import useApi from "../../hooks/useApi";
 import { useBlogStore } from "../../store/blogStore";
 
-// Configuration: number of items shown in "Recent posts"
 const RECENT_COUNT = 5;
 
-// Skeleton card used while loading and store empty
 const SkeletonCard = () => (
   <div className="bg-white rounded-2xl overflow-hidden shadow-sm p-5 animate-pulse">
     <div className="h-4 w-1/4 bg-gray-200 rounded mb-3" />
@@ -26,7 +24,7 @@ const SkeletonCard = () => (
   </div>
 );
 
-// Format full month
+
 const formatDate = (raw) => {
   try {
     return new Date(raw).toLocaleDateString("en-US", {
@@ -59,7 +57,7 @@ const normalize = (raw) => {
 const AllBlogs = () => {
   const { fetchBlogs } = useApi();
 
-  // PUBLIC read-only state
+
   const allBlogs = useBlogStore((s) => s.allBlogs);
   const fetchedAll = useBlogStore((s) => s.fetchedAll);
   const loading = useBlogStore((s) => s.loading);
@@ -72,7 +70,7 @@ const AllBlogs = () => {
     let mounted = true;
     (async () => {
       try {
-        // Ensure public: true so cookies/tokens are NOT sent
+       
         const arr = await fetchBlogs({ maxRetries: 3, retryDelayMs: 600, public: true });
         if (!mounted) return;
         if (Array.isArray(arr) && arr.length > 0) {
@@ -84,7 +82,7 @@ const AllBlogs = () => {
     })();
 
     return () => { mounted = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [fetchedAll, fetchBlogs, setAllBlogs]);
 
   const posts = useMemo(() => {

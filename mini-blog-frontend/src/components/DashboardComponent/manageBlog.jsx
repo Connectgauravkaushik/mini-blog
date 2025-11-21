@@ -1,4 +1,3 @@
-// src/components/ManageBlogs.jsx
 import React, { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -16,13 +15,6 @@ import { useBlogStore } from "../../store/blogStore";
 import { useUserStore } from "../../store/userStore";
 import SimpleEditModal from "./EditBlog";
 import DeleteBlogModal from "./DeleteBlog";
-
-/**
- * ManageBlogs — purely client-side
- * - reads posts from authorBlogs (same source Dashboard uses)
- * - no network calls here
- * - keeps edit/delete modals wired up
- */
 
 const SkeletonRow = () => (
   <div className="grid grid-cols-1 md:grid-cols-12 gap-4 px-6 py-5 items-center">
@@ -48,9 +40,8 @@ const SkeletonRow = () => (
 );
 
 const ManageBlogs = () => {
-  // read from author-specific state (Dashboard uses this same state)
   const authorBlogs = useBlogStore((s) => s.authorBlogs);
-  // fallback to editable 'blogs' if authorBlogs is empty and you want that
+
   const fallbackBlogs = useBlogStore((s) => s.blogs);
 
   // user store modal helpers
@@ -60,13 +51,15 @@ const ManageBlogs = () => {
   const editingBlog = useUserStore((s) => s.editingBlog);
   const openDeleteModal = useUserStore((s) => s.openDeleteModal);
 
-  // Use authorBlogs first, then fallback to blogs
-  const source = Array.isArray(authorBlogs) && authorBlogs.length > 0 ? authorBlogs : fallbackBlogs || [];
+  const source =
+    Array.isArray(authorBlogs) && authorBlogs.length > 0
+      ? authorBlogs
+      : fallbackBlogs || [];
 
-  // normalize for UI
   const normalized = useMemo(() => {
     return (source || []).map((raw) => {
-      const id = raw._id || raw.id || String(raw._uuid || raw.tempId || Math.random());
+      const id =
+        raw._id || raw.id || String(raw._uuid || raw.tempId || Math.random());
       const title = raw.title || raw.name || "Untitled";
       const content = raw.content || raw.body || raw.excerpt || "";
       const status =
@@ -77,7 +70,11 @@ const ManageBlogs = () => {
           : "Published";
       const dateRaw = raw.updatedAt || raw.createdAt || raw.date || null;
       const date = dateRaw
-        ? new Date(dateRaw).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+        ? new Date(dateRaw).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })
         : "—";
       return { id, title, content, status, date, raw };
     });
@@ -87,22 +84,27 @@ const ManageBlogs = () => {
     openDeleteModal(raw);
   };
 
-  // simple boolean for empty state
   const empty = !Array.isArray(normalized) || normalized.length === 0;
 
   return (
     <div className="w-full min-h-screen bg-slate-50 text-slate-600 font-sans flex flex-col">
-      {/* Header */}
       <header className="px-6 py-8 md:px-10 lg:px-16">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">Content Manager</h1>
-            <p className="text-slate-500 text-sm mt-1">Manage your publication's posts and drafts.</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+              Content Manager
+            </h1>
+            <p className="text-slate-500 text-sm mt-1">
+              Manage your publication's posts and drafts.
+            </p>
           </div>
 
           <div className="flex items-center gap-3 w-full md:w-auto">
             <div className="relative flex-1 md:w-72">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                size={16}
+              />
               <input
                 type="text"
                 placeholder="Search stories..."
@@ -116,11 +118,9 @@ const ManageBlogs = () => {
         </div>
       </header>
 
-      {/* Main List Area */}
       <main className="flex-1 px-6 md:px-10 lg:px-16 pb-12">
         <div className="max-w-7xl mx-auto">
           <div className="bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-slate-200 overflow-hidden">
-            {/* Table Header */}
             <div className="grid grid-cols-12 gap-4 px-6 py-4 border-b border-slate-100 bg-slate-50/50 text-xs font-semibold text-slate-400 uppercase tracking-wider">
               <div className="col-span-6">Title & Excerpt</div>
               <div className="col-span-2">Status</div>
@@ -128,11 +128,14 @@ const ManageBlogs = () => {
               <div className="col-span-2 text-right">Actions</div>
             </div>
 
-            {/* Rows */}
             <div className="divide-y divide-slate-100">
               <AnimatePresence mode="popLayout">
                 {empty ? (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-20 text-center">
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="py-20 text-center"
+                  >
                     <p className="text-slate-400 text-sm">No stories found.</p>
                   </motion.div>
                 ) : (
@@ -145,7 +148,6 @@ const ManageBlogs = () => {
                       layout
                       className="group grid grid-cols-1 md:grid-cols-12 gap-4 px-6 py-4 items-center hover:bg-slate-50/60 transition-colors duration-200"
                     >
-                      {/* Column 1: Title */}
                       <div className="col-span-12 md:col-span-6 pr-4">
                         <div className="flex items-start gap-3">
                           <div className="mt-1 text-slate-300">
@@ -165,7 +167,6 @@ const ManageBlogs = () => {
                         </div>
                       </div>
 
-                      {/* Column 2: Status */}
                       <div className="col-span-6 md:col-span-2 flex items-center">
                         <span
                           className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${
@@ -174,18 +175,20 @@ const ManageBlogs = () => {
                               : "bg-slate-100 text-slate-600 border-slate-200"
                           }`}
                         >
-                          {blog.status === "Published" ? <CheckCircle2 size={10} /> : <Circle size={8} fill="currentColor" />}
+                          {blog.status === "Published" ? (
+                            <CheckCircle2 size={10} />
+                          ) : (
+                            <Circle size={8} fill="currentColor" />
+                          )}
                           {blog.status}
                         </span>
                       </div>
 
-                      {/* Column 3: Date */}
                       <div className="col-span-6 md:col-span-2 flex items-center text-xs text-slate-400 font-medium">
                         <CalendarDays size={14} className="mr-2 opacity-70" />
                         {blog.date}
                       </div>
 
-                      {/* Column 4: Actions */}
                       <div className="col-span-12 md:col-span-2 flex items-center justify-end gap-1">
                         <div className="flex items-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
                           <button
@@ -216,10 +219,13 @@ const ManageBlogs = () => {
         </div>
       </main>
 
-      {/* Modals */}
       <AnimatePresence>
         {showEditingModal && editingBlog && (
-          <SimpleEditModal isOpen={showEditingModal} blog={editingBlog} onClose={() => closeEditingModal()} />
+          <SimpleEditModal
+            isOpen={showEditingModal}
+            blog={editingBlog}
+            onClose={() => closeEditingModal()}
+          />
         )}
       </AnimatePresence>
       <DeleteBlogModal />
