@@ -1,4 +1,3 @@
-// src/App.jsx
 import "./App.css";
 import { Suspense, lazy } from "react";
 import {
@@ -48,7 +47,7 @@ function DashboardLayout() {
         </aside>
 
         <main className="w-full" id="main-content" tabIndex="-1">
-          {/* This Outlet will render Dashboard, ManageBlogs, CreateBlog, etc */}
+       
           <div className="dashboard-content-inner">
             <Outlet />
           </div>
@@ -62,12 +61,12 @@ function DashboardLayout() {
 function RequireAuth({ children }) {
   const isAuthenticated = useUserStore((s) => s.isAuthenticated);
 
-  // If not authenticated, redirect to /login
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  // else render children (dashboard layout etc)
+
   return children;
 }
 
@@ -101,7 +100,7 @@ function App() {
       ],
     },
 
-    // login (optional redirect when already authenticated)
+
     {
       path: "login",
       element: (
@@ -113,7 +112,7 @@ function App() {
       ),
     },
 
-    // Protected dashboard routes
+
     {
       path: "dashboard",
       element: (
