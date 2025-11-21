@@ -106,8 +106,8 @@ Unauthorized users ⇒ auto redirect to **/login**
 | POST | `/api/blogs` | Create new blog *(requires auth)* |
 | GET | `/api/blogs` | Fetch all blogs (public) |
 | GET | `/api/blogs/author` | Fetch author’s blogs |
-| PATCH | `/api/blogs/:id` | Update blog *(author only)* |
-| DELETE | `/api/blogs/:id` | Delete blog *(author only)* |
+| PUT | `/api/blogs/edit/:id` | Update blog *(author only)* |
+| DELETE | `/api/blogs/delete/:id` | Delete blog *(author only)* |
 
 ### **AI Support Agent**
 | Method | Endpoint | Description |
